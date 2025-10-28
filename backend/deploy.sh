@@ -41,11 +41,17 @@ if ! command -v gcloud &> /dev/null; then
     exit 1
 fi
 
-# Check if model weights exist
+# Check if model weights exist, download if missing
 if [ ! -f "models/pothole_yolov8n.pt" ]; then
-    echo -e "${RED}ERROR: Model weights not found at models/pothole_yolov8n.pt${NC}"
-    echo "Please download from https://github.com/FarzadNekouee/YOLOv8_Pothole_Segmentation_Road_Damage_Assessment"
-    exit 1
+    echo -e "${YELLOW}Model weights not found. Downloading...${NC}"
+    mkdir -p models
+    curl -o models/pothole_yolov8n.pt https://raw.githubusercontent.com/FarzadNekouee/YOLOv8_Pothole_Segmentation_Road_Damage_Assessment/master/model/best.pt
+    
+    if [ ! -f "models/pothole_yolov8n.pt" ]; then
+        echo -e "${RED}ERROR: Failed to download model weights${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}Model downloaded successfully!${NC}"
 fi
 
 # Set active project
