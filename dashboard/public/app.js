@@ -383,13 +383,55 @@ zoomAllBtn.addEventListener('click', () => {
   }
 });
 
+// Backend API configuration
+const API_BASE_URL = window.__API_BASE_URL__ || 'https://your-backend.run.app';
+const API_KEY = window.__API_KEY__ || '';
+
 // Mark as repaired function (global for inline onclick)
 window.markAsRepaired = async function(detectionId) {
   if (!confirm('Mark this pothole as repaired?')) return;
   
-  // In production, call backend API to update status
-  alert(`Pothole ${detectionId} marked as repaired (API integration pending)`);
-  // TODO: Implement actual API call to /v1/detections/{id}/update-status
+  try {
+    // Show loading state
+    const button = event?.target;
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Updating...';
+    }
+    
+    // Call backend API to update status
+    const response = await fetch(`${API_BASE_URL}/v1/detections/${detectionId}/update-status?status=repaired`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    // Success feedback
+    alert(`Successfully marked pothole ${detectionId} as repaired!`);
+    
+    // Refresh the display (data will update via Firestore listener)
+    console.log('Status updated:', result);
+    
+  } catch (error) {
+    console.error('Error marking pothole as repaired:', error);
+    alert(`Failed to update status: ${error.message}\n\nPlease ensure:\n1. Backend API is running\n2. API key is configured\n3. You have permission to update detections`);
+  } finally {
+    // Reset button state
+    const button = event?.target;
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Mark Repaired';
+    }
+  }
 };
 
 // Firestore listener (public collection 'detections')

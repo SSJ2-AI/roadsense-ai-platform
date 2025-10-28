@@ -39,7 +39,7 @@ def calculate_priority_score(severity: str, num_detections: int) -> int:
     return min(max(score, 0), 100)
 
 
-def migrate_detection(doc_ref, doc_data):
+def migrate_detection(doc_ref, doc_data, dry_run=False):
     """Migrate a single detection record."""
     # Check if already migrated
     if doc_data.get("severity") is not None:
@@ -79,15 +79,19 @@ def migrate_detection(doc_ref, doc_data):
         "migratedAt": datetime.now(timezone.utc),
     }
     
-    doc_ref.update(updates)
-    return True, "Migrated successfully"
+    # Skip actual update in dry-run mode
+    if not dry_run:
+        doc_ref.update(updates)
+    
+    return True, "Migrated successfully" if not dry_run else "Would migrate (dry-run)"
 
 
-def run_migration(project_id: str, collection_name: str = "detections", batch_size: int = 100):
+def run_migration(project_id: str, collection_name: str = "detections", batch_size: int = 100, dry_run: bool = False):
     """Run the migration on all detection documents."""
     print(f"Starting migration for project: {project_id}")
     print(f"Collection: {collection_name}")
     print(f"Batch size: {batch_size}")
+    print(f"Mode: {'DRY RUN' if dry_run else 'LIVE'}")
     print("-" * 60)
     
     # Initialize Firestore client
@@ -104,11 +108,11 @@ def run_migration(project_id: str, collection_name: str = "detections", batch_si
     for doc in docs:
         try:
             doc_data = doc.to_dict()
-            success, message = migrate_detection(doc.reference, doc_data)
+            success, message = migrate_detection(doc.reference, doc_data, dry_run=dry_run)
             
             if success:
                 migrated_count += 1
-                print(f"✓ Migrated: {doc.id}")
+                print(f"✓ {'Would migrate' if dry_run else 'Migrated'}: {doc.id}")
             else:
                 skipped_count += 1
                 print(f"⊘ Skipped: {doc.id} - {message}")
@@ -117,8 +121,8 @@ def run_migration(project_id: str, collection_name: str = "detections", batch_si
             print(f"✗ Error: {doc.id} - {str(e)}")
     
     print("-" * 60)
-    print(f"Migration complete!")
-    print(f"  Migrated: {migrated_count}")
+    print(f"Migration {'preview' if dry_run else 'complete'}!")
+    print(f"  {'Would migrate' if dry_run else 'Migrated'}: {migrated_count}")
     print(f"  Skipped: {skipped_count}")
     print(f"  Errors: {error_count}")
     print(f"  Total: {migrated_count + skipped_count + error_count}")
@@ -143,7 +147,8 @@ if __name__ == "__main__":
         migrated, skipped, errors = run_migration(
             args.project,
             args.collection,
-            args.batch_size
+            args.batch_size,
+            dry_run=args.dry_run
         )
         
         if errors > 0:
