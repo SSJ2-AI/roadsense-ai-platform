@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RoadSense Area Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>📍 RoadSense Area Analysis</h1>
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-tab">Priority Queue</a>
+        <a href="analytics.html" class="nav-tab">Analytics</a>
+        <a href="areas.html" class="nav-tab active">Area Analysis</a>
+      </nav>
+      <div class="auth">
+        <button id="sign-in">Sign in with Google</button>
+        <button id="sign-out" class="hidden">Sign out</button>
+        <span id="user-info"></span>
+      </div>
+    </header>
+
+    <main class="area-analysis-dashboard">
+      <!-- Area Selection -->
+      <section class="area-selector">
+        <div class="selector-group">
+          <label for="area-select">Select Area/Ward:</label>
+          <select id="area-select">
+            <option value="">-- Select Area --</option>
+          </select>
+        </div>
+        <button id="compare-all" class="btn-secondary">View City-Wide Comparison</button>
+      </section>
+
+      <!-- Area Overview Cards -->
+      <section class="area-overview">
+        <div class="overview-card">
+          <h3>Area Information</h3>
+          <div id="area-info">
+            <p class="placeholder">Select an area to view details</p>
+          </div>
+        </div>
+        
+        <div class="overview-card">
+          <h3>Key Metrics</h3>
+          <div id="area-metrics" class="metrics-grid">
+            <div class="metric-item">
+              <div class="metric-label">Total Potholes</div>
+              <div class="metric-value" id="area-total">-</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">High Severity</div>
+              <div class="metric-value" id="area-high">-</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Avg Priority</div>
+              <div class="metric-value" id="area-priority">-</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Repair Rate</div>
+              <div class="metric-value" id="area-repair-rate">-</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="overview-card">
+          <h3>Comparison to City Average</h3>
+          <div id="area-comparison">
+            <canvas id="comparison-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Map Section -->
+      <section class="area-map-section">
+        <h2>Area Map</h2>
+        <div id="area-map"></div>
+      </section>
+
+      <!-- Area Statistics Table -->
+      <section class="area-stats-section">
+        <h2>Area Details</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Severity Breakdown</h3>
+            <canvas id="severity-breakdown-chart"></canvas>
+          </div>
+          
+          <div class="stat-card">
+            <h3>Status Breakdown</h3>
+            <canvas id="status-breakdown-chart"></canvas>
+          </div>
+          
+          <div class="stat-card">
+            <h3>Streets in This Area</h3>
+            <div id="streets-list" class="streets-list"></div>
+          </div>
+          
+          <div class="stat-card">
+            <h3>Repair Completion Rate</h3>
+            <div class="completion-rate">
+              <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+              </div>
+              <div class="progress-label">
+                <span id="completion-percentage">0%</span> completed
+              </div>
+              <div class="completion-details">
+                <div>Repaired: <strong id="area-repaired">0</strong></div>
+                <div>Pending: <strong id="area-pending">0</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- City-Wide Comparison Table -->
+      <section id="city-comparison-section" class="city-comparison hidden">
+        <h2>City-Wide Area Comparison</h2>
+        <div class="table-wrapper">
+          <table id="city-comparison-table" class="stats-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Total Potholes</th>
+                <th>High Severity</th>
+                <th>Medium Severity</th>
+                <th>Low Severity</th>
+                <th>Avg Priority</th>
+                <th>Repair Rate</th>
+              </tr>
+            </thead>
+            <tbody id="city-comparison-tbody">
+              <tr><td colspan="7" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>
+        © City of Brampton POC • Area analysis powered by real-time data
+      </small>
+    </footer>
+
+    <script src="firebase-config.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="areas.js"></script>
+  </body>
+</html>
