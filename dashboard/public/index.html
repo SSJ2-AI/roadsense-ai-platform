@@ -3,16 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RoadSense Dashboard</title>
+    <title>RoadSense Dashboard - Priority Queue</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header>
-      <h1>RoadSense Dashboard</h1>
+      <h1>🚧 RoadSense Dashboard</h1>
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-tab active">Priority Queue</a>
+        <a href="analytics.html" class="nav-tab">Analytics</a>
+        <a href="areas.html" class="nav-tab">Area Analysis</a>
+      </nav>
       <div class="auth">
         <button id="sign-in">Sign in with Google</button>
         <button id="sign-out" class="hidden">Sign out</button>
@@ -20,13 +27,107 @@
       </div>
     </header>
 
-    <main>
-      <section class="controls">
-        <button id="export-csv">Export CSV</button>
-        <span class="note">Realtime updates from Firestore. PII-free by design.</span>
+    <main class="priority-dashboard">
+      <!-- Filters Section -->
+      <section class="filters-section">
+        <div class="filter-group">
+          <label for="status-filter">Status:</label>
+          <select id="status-filter">
+            <option value="">All Unrepaired</option>
+            <option value="reported">Reported</option>
+            <option value="verified">Verified</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="repaired">Repaired</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="severity-filter">Severity:</label>
+          <select id="severity-filter">
+            <option value="">All</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="area-filter">Area:</label>
+          <select id="area-filter">
+            <option value="">All Areas</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-from">Date From:</label>
+          <input type="date" id="date-from" />
+        </div>
+        
+        <div class="filter-group">
+          <label for="date-to">Date To:</label>
+          <input type="date" id="date-to" />
+        </div>
+        
+        <div class="filter-actions">
+          <button id="apply-filters" class="btn-primary">Apply Filters</button>
+          <button id="reset-filters" class="btn-secondary">Reset</button>
+          <button id="toggle-heatmap" class="btn-secondary">Toggle Heatmap</button>
+          <button id="export-csv" class="btn-secondary">Export CSV</button>
+        </div>
       </section>
-      <div id="map"></div>
-      <section id="stats"></section>
+
+      <!-- Map and Stats Grid -->
+      <div class="grid-container">
+        <!-- Map Section -->
+        <section class="map-section">
+          <div id="map"></div>
+          <div class="map-controls">
+            <button id="zoom-all" class="btn-map">Fit All Markers</button>
+          </div>
+        </section>
+
+        <!-- Area Statistics Panel -->
+        <section class="stats-panel">
+          <h2>Area Statistics</h2>
+          <div id="area-stats-chart">
+            <canvas id="area-chart"></canvas>
+          </div>
+          <div id="area-stats-table"></div>
+        </section>
+      </div>
+
+      <!-- Priority Queue Table -->
+      <section class="table-section">
+        <h2>Priority Queue <span id="queue-count" class="badge">0</span></h2>
+        <div class="table-wrapper">
+          <table id="priority-queue-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="priority_score">Priority Score ↕</th>
+                <th class="sortable" data-sort="severity">Severity ↕</th>
+                <th class="sortable" data-sort="area">Area ↕</th>
+                <th>Street Name</th>
+                <th class="sortable" data-sort="numDetections">Count ↕</th>
+                <th class="sortable" data-sort="createdAt">Age ↕</th>
+                <th>Status</th>
+                <th>Urgency</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="queue-tbody">
+              <tr>
+                <td colspan="9" class="loading">Loading priority queue...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Mobile Field Worker View -->
+      <section class="mobile-worker-view" id="mobile-view">
+        <h2>My Assigned Potholes</h2>
+        <div id="assigned-list"></div>
+      </section>
     </main>
 
     <footer>
@@ -37,6 +138,9 @@
 
     <script src="firebase-config.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script type="module" src="app.js"></script>
   </body>
 </html>

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RoadSense Analytics Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>📊 RoadSense Analytics</h1>
+      <nav class="nav-tabs">
+        <a href="index.html" class="nav-tab">Priority Queue</a>
+        <a href="analytics.html" class="nav-tab active">Analytics</a>
+        <a href="areas.html" class="nav-tab">Area Analysis</a>
+      </nav>
+      <div class="auth">
+        <button id="sign-in">Sign in with Google</button>
+        <button id="sign-out" class="hidden">Sign out</button>
+        <span id="user-info"></span>
+      </div>
+    </header>
+
+    <main class="analytics-dashboard">
+      <!-- KPI Cards -->
+      <section class="kpi-section">
+        <div class="kpi-card">
+          <div class="kpi-icon">🚧</div>
+          <div class="kpi-value" id="kpi-total">-</div>
+          <div class="kpi-label">Total Potholes Detected</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-value" id="kpi-repaired">-</div>
+          <div class="kpi-label">Potholes Repaired</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">⏳</div>
+          <div class="kpi-value" id="kpi-pending">-</div>
+          <div class="kpi-label">Pending Repairs</div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-value" id="kpi-rate">-</div>
+          <div class="kpi-label">Repair Rate</div>
+        </div>
+      </section>
+
+      <!-- Charts Grid -->
+      <div class="charts-grid">
+        <!-- Repaired vs Pending Pie Chart -->
+        <section class="chart-card">
+          <h2>Repair Status Distribution</h2>
+          <div class="chart-container">
+            <canvas id="status-pie-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Detections Over Time Line Chart -->
+        <section class="chart-card">
+          <h2>Detections Over Time (Last 30 Days)</h2>
+          <div class="chart-container">
+            <canvas id="timeline-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Top 5 Hotspot Areas -->
+        <section class="chart-card">
+          <h2>Top 5 Hotspot Areas</h2>
+          <div class="table-wrapper">
+            <table id="hotspots-table" class="stats-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Area</th>
+                  <th>Potholes</th>
+                  <th>Avg Priority</th>
+                </tr>
+              </thead>
+              <tbody id="hotspots-tbody">
+                <tr><td colspan="4" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Cost Savings & ROI -->
+        <section class="chart-card">
+          <h2>Cost Savings Estimate</h2>
+          <div class="roi-container">
+            <div class="roi-metric">
+              <div class="roi-label">Estimated Cost Savings</div>
+              <div class="roi-value" id="cost-savings">$0</div>
+              <div class="roi-description">Based on proactive vs reactive repairs</div>
+            </div>
+            
+            <div class="roi-separator"></div>
+            
+            <div class="roi-calculator">
+              <h3>ROI Calculator</h3>
+              <div class="form-group">
+                <label>Initial Investment ($):</label>
+                <input type="number" id="roi-investment" value="50000" min="0" step="1000" />
+              </div>
+              <div class="form-group">
+                <label>Cost per Reactive Repair ($):</label>
+                <input type="number" id="roi-reactive-cost" value="800" min="0" step="50" />
+              </div>
+              <div class="form-group">
+                <label>Cost per Proactive Repair ($):</label>
+                <input type="number" id="roi-proactive-cost" value="300" min="0" step="50" />
+              </div>
+              <button id="calculate-roi" class="btn-primary">Calculate ROI</button>
+              
+              <div id="roi-results" class="roi-results hidden">
+                <div class="roi-result-item">
+                  <span>Total Savings:</span>
+                  <strong id="roi-total-savings">$0</strong>
+                </div>
+                <div class="roi-result-item">
+                  <span>ROI:</span>
+                  <strong id="roi-percentage">0%</strong>
+                </div>
+                <div class="roi-result-item">
+                  <span>Payback Period:</span>
+                  <strong id="roi-payback">-</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Average Repair Time -->
+        <section class="chart-card">
+          <h2>Average Repair Time</h2>
+          <div class="metric-display">
+            <div class="metric-value" id="avg-repair-time">-</div>
+            <div class="metric-unit">days</div>
+            <div class="metric-description">Average time from detection to repair completion</div>
+          </div>
+        </section>
+
+        <!-- Severity Distribution -->
+        <section class="chart-card">
+          <h2>Severity Distribution</h2>
+          <div class="chart-container">
+            <canvas id="severity-chart"></canvas>
+          </div>
+        </section>
+      </div>
+
+      <!-- Export Section -->
+      <section class="export-section">
+        <h2>Export Reports</h2>
+        <div class="export-buttons">
+          <button id="export-full-report" class="btn-primary">Export Full Report (CSV)</button>
+          <button id="export-summary" class="btn-secondary">Export Executive Summary (PDF)</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>
+        © City of Brampton POC • Real-time analytics from Firestore
+      </small>
+    </footer>
+
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="analytics.js"></script>
+  </body>
+</html>

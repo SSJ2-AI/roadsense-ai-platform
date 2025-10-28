@@ -52,3 +52,12 @@ class DetectionRecord(BaseModel):
     metadata: DetectionMetadata
     storagePath: str
     detection: DetectionResult
+    # Priority and area analysis fields
+    severity: Optional[str] = Field(default=None, description="low/medium/high based on detection count and confidence")
+    priority_score: Optional[int] = Field(default=None, ge=0, le=100, description="Calculated ranking score 0-100")
+    area: Optional[str] = Field(default=None, description="Neighborhood/ward name from reverse geocoding")
+    street_name: Optional[str] = Field(default=None, description="Street name from reverse geocoding")
+    status: str = Field(default="reported", description="reported/verified/scheduled/repaired")
+    repair_urgency: Optional[str] = Field(default=None, description="routine/urgent/emergency")
+    cluster_id: Optional[str] = Field(default=None, description="Cluster identifier for grouped potholes")
+    road_type: Optional[str] = Field(default="residential", description="residential/arterial/highway")

@@ -49,6 +49,15 @@ class Settings(BaseSettings):
 
     # API
     MAX_UPLOAD_SIZE_MB: int = Field(default=15)
+    
+    # Feature Flags (for zero-downtime deployment)
+    ENABLE_CLUSTERING: bool = Field(default=True, description="Enable/disable DBSCAN clustering")
+    ENABLE_REVERSE_GEOCODING: bool = Field(default=True, description="Enable/disable reverse geocoding")
+    ENABLE_PRIORITY_SCORING: bool = Field(default=True, description="Enable/disable priority scoring")
+    ENABLE_ANALYTICS: bool = Field(default=True, description="Enable/disable analytics endpoints")
+    
+    # Google Maps API (for reverse geocoding)
+    GOOGLE_MAPS_API_KEY: str = Field(default="", description="Google Maps API key for reverse geocoding")
 
     @property
     def allowed_origins_list(self) -> list[str]:
