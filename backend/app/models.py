@@ -34,7 +34,7 @@ class DetectionRequest(BaseModel):
     @model_validator(mode="after")
     def validate_payload(self):
         if not self.image_base64:
-            raise ValueError("image_base4 is required for JSON endpoint")
+            raise ValueError("image_base64 is required for JSON endpoint")
         return self
 
 

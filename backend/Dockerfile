@@ -22,12 +22,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python deps first for better caching
-COPY backend/requirements.txt /app/requirements.txt
+# Install Python deps first for better caching (build context should be backend/)
+COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
 # Application code
-COPY backend /app
+COPY . /app
 
 # Non-root user
 RUN useradd -m appuser
