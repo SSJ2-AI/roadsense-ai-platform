@@ -31,7 +31,10 @@ android/app/build/
 .idea/
 
 # Models and data
+#! Allow the committed pothole model path if needed for CI; generally avoid committing large binaries
+# Ignore all .pt except the explicit pothole weight when deliberately included
 backend/models/*.pt
+!backend/models/pothole_yolov8n.pt
 backend/models/*.onnx
 backend/models/*.engine
 backend/models/*.tflite

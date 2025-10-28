@@ -41,12 +41,12 @@ class Detection {
   });
 
   factory Detection.fromJson(Map<String, dynamic> json) {
-    final bxs = (json['detection']?['boundingBoxes'] ?? json['boundingBoxes']) as List<dynamic>;
+    final bxs = (json['detection']?['boundingBoxes'] ?? json['boundingBoxes'] ?? []) as List<dynamic>;
     return Detection(
       boxes: bxs.map((e) => BoundingBox.fromJson(e as Map<String, dynamic>)).toList(),
-      numDetections: json['detection']?['numDetections'] ?? json['numDetections'],
-      modelVersion: json['detection']?['modelVersion'] ?? json['modelVersion'],
-      inferenceMs: json['detection']?['inferenceMs'] ?? json['inferenceMs'],
+      numDetections: json['detection']?['numDetections'] ?? json['numDetections'] ?? 0,
+      modelVersion: json['detection']?['modelVersion'] ?? json['modelVersion'] ?? 'unknown',
+      inferenceMs: json['detection']?['inferenceMs'] ?? json['inferenceMs'] ?? 0,
     );
   }
 }

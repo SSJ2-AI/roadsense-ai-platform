@@ -86,7 +86,20 @@ def on_startup() -> None:
             )
         else:
             _yolo_model = YOLO(model_path)
-            logger.info(f"YOLO model loaded from {model_path}")
+            # Validation: ensure model exposes class names and appears to be pothole-capable
+            model_names = getattr(_yolo_model.model, 'names', None) or getattr(_yolo_model, 'names', None)
+            num_classes = len(model_names) if isinstance(model_names, (list, dict)) else 'unknown'
+            logger.info(f"YOLO model loaded from {model_path}; classes={num_classes}")
+            try:
+                names_list = list(model_names.values()) if isinstance(model_names, dict) else list(model_names or [])
+                if not names_list:
+                    logger.warning("Model has no class names metadata; ensure correct weights are provided.")
+                else:
+                    logger.info(f"Model class names: {names_list}")
+                    if not any('pothole' in str(n).lower() for n in names_list):
+                        logger.warning("'pothole' class not found in model names; verify correct pothole weights.")
+            except Exception:
+                logger.warning("Could not introspect model class names for validation.")
     except Exception as e:
         logger.exception(f"Failed to load YOLO model: {e}")
 

@@ -29,6 +29,10 @@ RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 # Application code
 COPY . /app
 
+# Ensure pothole model weights are copied into the image at a deterministic path
+# If you manage weights via CI/CD download, you may comment this line out.
+COPY models/pothole_yolov8n.pt /app/models/pothole_yolov8n.pt
+
 # Non-root user
 RUN useradd -m appuser
 USER appuser

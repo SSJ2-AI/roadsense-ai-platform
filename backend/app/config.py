@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     DATA_RETENTION_DAYS: int = Field(default=90)
 
     # ML
-    YOLO_MODEL_PATH: str = Field(default="/app/models/weights.pt")
+    YOLO_MODEL_PATH: str = Field(default="/app/models/pothole_yolov8n.pt")
     YOLO_CONFIDENCE_THRESHOLD: float = Field(default=0.35)
 
     # API
