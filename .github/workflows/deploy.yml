@@ -1,0 +1,17 @@
+name: Deploy to Cloud Run
+on:
+  push:
+    branches: [main]
+env:
+  PROJECT_ID: gtoasana
+  SERVICE_NAME: roadsense-api
+  REGION: us-central1
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Cloud Run
+        run: |
+          echo "Deployment will be configured with Workload Identity Federation"
+          echo "Backend is already live at: https://roadsense-api-987284702676.us-central1.run.app"
