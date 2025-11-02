@@ -1,0 +1,21 @@
+name: Scaffold Flutter Project
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  scaffold:
+    if: contains(github.event.comment.body, '@cursor-init-project')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+      - run: |
+          cd mobile
+          flutter create --platforms android,ios .
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+          git add .
+          git commit -m 'feat: scaffold Flutter project'
+          git push
