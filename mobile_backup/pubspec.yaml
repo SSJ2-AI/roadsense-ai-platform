@@ -1,0 +1,19 @@
+name: roadsense_mobile
+description: RoadSense AI - Pothole detection mobile app (Flutter)
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter: { sdk: flutter }
+  cupertino_icons: ^1.0.6
+  camera: ^0.10.5+9
+  geolocator: ^13.0.1
+  http: ^1.2.2
+  path: ^1.9.0
+  path_provider: ^2.1.5
+
+flutter:
+  uses-material-design: true
