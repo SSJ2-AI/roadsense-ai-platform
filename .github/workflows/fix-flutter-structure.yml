@@ -1,1 +1,27 @@
-name: Fix Flutter Project Structureon: workflow_dispatchjobs:  fix:    runs-on: ubuntu-latest    steps:      - uses: actions/checkout@v4      - uses: subosito/flutter-action@v2        with:          flutter-version: '3.19.0'      - name: Backup and recreate        run: |          cd mobile          mkdir -p ../mobile_backup          cp -r lib ../mobile_backup/          cp pubspec.yaml ../mobile_backup/          rm -rf android ios          flutter create --platforms android,ios .          cp -r ../mobile_backup/lib .          flutter pub get      - name: Commit        run: |          git config user.name 'GitHub Actions'          git config user.email 'actions@github.com'          git add .          git commit -m 'fix: regenerate Flutter project structure'          git push
+aname: Fix Flutter Project Structure
+on: workflow_dispatch
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+      - name: Backup and recreate
+        run: |
+          cd mobile
+          mkdir -p ../mobile_backup
+          cp -r lib ../mobile_backup/
+          cp pubspec.yaml ../mobile_backup/
+          rm -rf android ios
+          flutter create --platforms android,ios .
+          cp -r ../mobile_backup/lib .
+          flutter pub get
+      - name: Commit
+        run: |
+          git config user.name 'GitHub Actions'
+          git config user.email 'actions@github.com'
+          git add .
+          git commit -m 'fix: regenerate Flutter project structure'
+          git push
