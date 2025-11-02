@@ -1,4 +1,4 @@
-aname: Fix Flutter Project Structure
+name: Fix Flutter Project Structure
 on: workflow_dispatch
 jobs:
   fix:
