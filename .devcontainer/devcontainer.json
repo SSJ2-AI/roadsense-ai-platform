@@ -1,0 +1,11 @@
+{
+  "name": "Flutter Development",
+  "image": "ghcr.io/dilanx/flutter-codespaces:latest",
+  "forwardPorts": [3000],
+  "postCreateCommand": "flutter doctor && flutter pub get",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dart-code.dart-code", "dart-code.flutter"]
+    }
+  }
+}
