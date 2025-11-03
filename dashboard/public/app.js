@@ -1,18 +1,41 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
-import { getFirestore, collection, onSnapshot, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+// Google Sheets API Configuration
+const SHEET_ID = '1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE';
+const API_KEY = 'YOUR_GOOGLE_SHEETS_API_KEY'; // TODO: Replace with actual API key
+const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
 
-// Replace at deploy: window.__FIREBASE_CONFIG__ should be injected by deploy script
-const firebaseConfig = window.__FIREBASE_CONFIG__ || {
-  apiKey: 'REPLACE_ME',
-  authDomain: 'REPLACE_ME.firebaseapp.com',
-  projectId: 'REPLACE_ME',
-};
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+async function loadPotholes() {
+    const response = await fetch(SHEET_URL);
+    const data = await response.json();
+    const rows = data.values.slice(1); // Skip header row
+
+    rows.forEach(row => {
+          const pothole = {
+                  id: row[0],
+                  photo: row[1],
+                  location: row[2],
+                  street: row[3],
+                  intersection: row[4],
+                  latitude: parseFloat(row[5]),
+                  longitude: parseFloat(row[6]),
+                  timestamp: row[7],
+                  severity: row[8],
+                  status: row[9],
+                  confidence: row[10],
+                  count: row[11],
+                  notes: row[12]
+          };
+          addPotholeToMap(pothole);
+    });
+}
+
+// Call on page load
+loadPotholes();
+
+
+
+
+
 
 // UI elements
 const signInBtn = document.getElementById('sign-in');
