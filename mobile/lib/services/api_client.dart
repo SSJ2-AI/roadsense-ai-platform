@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/detection.dart';
 
 class ApiClient {
-  static String get baseUrl => 'https://roadsense-api-987284702676.us-central1.run.app';
+  static const String baseUrl = 'https://roadsense-api-987284702676.us-central1.run.app';
   static String get apiKey => const String.fromEnvironment('API_KEY');
 
   static Future<Detection> uploadDetection(
