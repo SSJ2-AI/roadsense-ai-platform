@@ -1,0 +1,6 @@
+{
+  "appId": "ai.roadsense.app",
+  "appName": "RoadSense AI",
+  "webDir": "public",
+  "bundledWebRuntime": false
+}

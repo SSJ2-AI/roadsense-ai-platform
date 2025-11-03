@@ -1,0 +1,39 @@
+name: Build Capacitor Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard/**'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Install dependencies
+        run: |
+          cd dashboard
+          npm install
+      - name: Add Android platform
+        run: |
+          cd dashboard
+          npx cap add android
+      - name: Sync Capacitor
+        run: |
+          cd dashboard
+          npx cap sync
+      - name: Build APK
+        run: |
+          cd dashboard/android
+          ./gradlew assembleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roadsense-android-apk
+          path: dashboard/android/app/build/outputs/apk/release/app-release.apk

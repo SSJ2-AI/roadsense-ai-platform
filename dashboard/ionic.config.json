@@ -1,0 +1,7 @@
+{
+  "name": "RoadSense AI",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}
