@@ -1,7 +1,6 @@
 // Google Sheets API Configuration
 const SHEET_ID = '1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE';
-const API_KEY = 'AIzaSyATauSb_TgJQGbSjZ9cP0o0pOEfLmz_Bw4'; // TODO: Replace with actual API key
-const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1?key=${API_KEY}`;
+const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1`;
 
 
 async function loadPotholes() {
