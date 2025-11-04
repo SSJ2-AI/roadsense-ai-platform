@@ -25,7 +25,7 @@ async function loadPotholes() {
                   count: row[11],
                   notes: row[12]
           };
-          const detection = { id: pothole.id, metadata: { location: { lat: pothole.latitude, lng: parseFloat(row[6]) }, photo: pothole.photo, street: pothole.street, intersection: pothole.intersection, severity: pothole.severity, status: pothole.status, confidence: pothole.confidence } }; upsertMarker(detection);
+          const detection = { id: pothole.id, metadata: { location: { lat: pothole.latitude, lng: pothole.longitude }, photo: pothole.photo, street: pothole.street, intersection: pothole.intersection, severity: pothole.severity, status: pothole.status, confidence: pothole.confidence } }; upsertMarker(detection);
     });
 }
 
