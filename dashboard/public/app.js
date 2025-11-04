@@ -1,35 +1,58 @@
-// Google Sheets API Configuration
-const SHEET_ID = '1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE';
-const SHEET_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1`;
-
+// Google Sheets configuration (public document)
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE/gviz/tq?tqx=out:json&sheet=Sheet1`;
 
 async function loadPotholes() {
-    const response = await fetch(SHEET_URL);
-    const data = await response.json();
-    const rows = data.values.slice(1); // Skip header row
+  try {
+    const response = await fetch(SHEET_URL, { cache: 'no-cache' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
 
-    rows.forEach(row => {
-          const pothole = {
-                  id: row[0],
-                  photo: row[1],
-                  location: row[2],
-                  street: row[3],
-                  intersection: row[4],
-                  latitude: parseFloat(row[5]),
-                  longitude: parseFloat(row[6]),
-                  timestamp: row[7],
-                  severity: row[8],
-                  status: row[9],
-                  confidence: row[10],
-                  count: row[11],
-                  notes: row[12]
-          };
-          const detection = { id: pothole.id, severity: pothole.severity, status: pothole.status, street_name: pothole.location, area: pothole.intersection, metadata: { location: { lat: pothole.latitude, lng: pothole.longitude } } }; upsertMarker(detection);
+    const text = await response.text();
+    const json = JSON.parse(text.substr(47).slice(0, -2));
+    const rows = json.table?.rows || [];
+
+    // Reset state before repopulating
+    markerCluster.clearLayers();
+    markers.clear();
+    allDetections = [];
+    filteredDetections = [];
+    areaSet.clear();
+
+    rows.forEach((row, index) => {
+      const cells = row.c || [];
+      const pothole = {
+        id: cells[0]?.v || '',
+        photo: cells[1]?.v || '',
+        location: cells[2]?.v || '',
+        street: cells[3]?.v || '',
+        intersection: cells[4]?.v || '',
+        latitude: parseFloat(cells[5]?.v || 0),
+        longitude: parseFloat(cells[6]?.v || 0),
+        timestamp: cells[7]?.f || cells[7]?.v || '',
+        severity: cells[8]?.v || 'Low',
+        status: cells[9]?.v || 'Reported',
+        confidence: cells[10]?.v || '',
+        count: cells[11]?.v || '',
+        notes: cells[12]?.v || ''
+      };
+
+      if (Number.isFinite(pothole.latitude) && Number.isFinite(pothole.longitude) && pothole.latitude && pothole.longitude) {
+        const detection = normalizePothole(pothole, index);
+        addPotholeToMap(detection);
+        addToPriorityQueue(detection);
+      }
     });
-}
 
-// Call on page load
-loadPotholes();
+    updateStats();
+  } catch (error) {
+    console.error('Error loading potholes:', error);
+    const tbody = document.getElementById('queue-tbody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="9" class="no-data">Failed to load potholes. Please try again later.</td></tr>';
+    }
+  }
+}
 
 
 
@@ -46,6 +69,10 @@ const resetFiltersBtn = document.getElementById('reset-filters');
 const toggleHeatmapBtn = document.getElementById('toggle-heatmap');
 const zoomAllBtn = document.getElementById('zoom-all');
 
+if (toggleHeatmapBtn) {
+  toggleHeatmapBtn.textContent = 'Show Heatmap';
+}
+
 // Filters
 const statusFilter = document.getElementById('status-filter');
 const severityFilter = document.getElementById('severity-filter');
@@ -53,24 +80,18 @@ const areaFilter = document.getElementById('area-filter');
 const dateFromFilter = document.getElementById('date-from');
 const dateToFilter = document.getElementById('date-to');
 
-// Auth
-const provider = new GoogleAuthProvider();
-signInBtn.addEventListener('click', async () => {
-  try { await signInWithPopup(auth, provider); } catch (e) { alert('Sign-in failed: ' + e); }
-});
-signOutBtn.addEventListener('click', async () => { await signOut(auth); });
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    userInfo.textContent = user.email || user.uid;
-    signInBtn.classList.add('hidden');
-    signOutBtn.classList.remove('hidden');
-  } else {
-    userInfo.textContent = '';
-    signInBtn.classList.remove('hidden');
-    signOutBtn.classList.add('hidden');
-  }
-});
+// Hide legacy auth controls (Firebase removed)
+if (signInBtn) {
+  signInBtn.classList.add('hidden');
+  signInBtn.setAttribute('aria-hidden', 'true');
+}
+if (signOutBtn) {
+  signOutBtn.classList.add('hidden');
+  signOutBtn.setAttribute('aria-hidden', 'true');
+}
+if (userInfo) {
+  userInfo.textContent = 'Public data view';
+}
 
 // Leaflet map
 const map = L.map('map').setView([43.7315, -79.7624], 12); // Brampton
@@ -102,6 +123,115 @@ const severityColors = {
   medium: '#f59e0b',
   low: '#10b981',
 };
+
+function parseSheetTimestamp(value) {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    const datePattern = /^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/;
+    const dateMatch = trimmed.match(datePattern);
+    if (dateMatch) {
+      const [, year, month, day, hour = '0', minute = '0', second = '0'] = dateMatch;
+      const parsed = new Date(Date.UTC(
+        parseInt(year, 10),
+        parseInt(month, 10),
+        parseInt(day, 10),
+        parseInt(hour, 10),
+        parseInt(minute, 10),
+        parseInt(second, 10)
+      ));
+      if (!Number.isNaN(parsed.valueOf())) {
+        return parsed.toISOString();
+      }
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.valueOf())) {
+      return parsed.toISOString();
+    }
+  }
+
+  if (typeof value === 'number') {
+    // Google Sheets serial date number (days since 1899-12-30)
+    const excelEpoch = Date.UTC(1899, 11, 30);
+    const millis = Math.round(value * 24 * 60 * 60 * 1000);
+    const parsed = new Date(excelEpoch + millis);
+    if (!Number.isNaN(parsed.valueOf())) {
+      return parsed.toISOString();
+    }
+  }
+
+  return '';
+}
+
+function normalizePothole(pothole, index) {
+  const severity = (pothole.severity || 'low').toString().trim().toLowerCase();
+  const status = (pothole.status || 'reported').toString().trim().toLowerCase();
+
+  const countNumber = Number(pothole.count);
+  const normalizedCount = Number.isFinite(countNumber) && countNumber > 0
+    ? Math.round(countNumber)
+    : 1;
+
+  const confidenceNumber = Number(pothole.confidence);
+  const normalizedConfidence = Number.isFinite(confidenceNumber) ? confidenceNumber : 0;
+
+  const severityWeights = { high: 3, medium: 2, low: 1 };
+  const priorityScore = (severityWeights[severity] || 1) * 100 + (normalizedCount * 10) + Math.round(normalizedConfidence * 10);
+
+  const createdAtIso = parseSheetTimestamp(pothole.timestamp);
+  const area = pothole.location || pothole.intersection || 'Unknown';
+  const streetName = pothole.street || pothole.location || 'Unknown street';
+
+  const urgency = severity === 'high'
+    ? 'urgent'
+    : severity === 'medium'
+      ? 'scheduled'
+      : 'routine';
+
+  return {
+    id: pothole.id || `sheet-${index + 1}`,
+    severity,
+    status,
+    area,
+    street_name: streetName,
+    priority_score: priorityScore,
+    detection: {
+      numDetections: normalizedCount,
+    },
+    createdAt: createdAtIso || (typeof pothole.timestamp === 'string' ? pothole.timestamp : ''),
+    repair_urgency: urgency,
+    metadata: {
+      location: {
+        lat: Number(pothole.latitude),
+        lng: Number(pothole.longitude),
+      },
+      source: 'google-sheets',
+      sheetRow: pothole,
+    },
+    confidence: normalizedConfidence,
+    photo: pothole.photo || '',
+    notes: pothole.notes || '',
+  };
+}
+
+function addPotholeToMap(detection) {
+  upsertMarker(detection);
+}
+
+function addToPriorityQueue(detection) {
+  allDetections.push(detection);
+}
+
+function updateStats() {
+  filteredDetections = [...allDetections];
+  populateAreaFilter();
+  applyFilters();
+  checkMobileView();
+}
 
 function createMarkerIcon(severity) {
   const color = severityColors[severity] || '#6b7280';
@@ -243,9 +373,13 @@ function renderPriorityQueue() {
   
   tbody.innerHTML = sorted.map(detection => {
     const severity = detection.severity || 'low';
-    const severityBadge = `<span class="badge badge-${severity}">${severity}</span>`;
-    const statusBadge = `<span class="badge badge-status">${detection.status || 'reported'}</span>`;
-    const urgencyBadge = `<span class="badge">${detection.repair_urgency || 'routine'}</span>`;
+    const severityBadge = `<span class="badge badge-${severity}">${severity.toUpperCase()}</span>`;
+    const status = detection.status || 'reported';
+    const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+    const statusBadge = `<span class="badge badge-status">${statusLabel}</span>`;
+    const urgency = detection.repair_urgency || 'routine';
+    const urgencyLabel = urgency.charAt(0).toUpperCase() + urgency.slice(1);
+    const urgencyBadge = `<span class="badge">${urgencyLabel}</span>`;
     const loc = detection.metadata?.location;
     const mapsUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : '#';
     
@@ -440,8 +574,13 @@ window.markAsRepaired = async function(detectionId) {
     // Success feedback
     alert(`Successfully marked pothole ${detectionId} as repaired!`);
     
-    // Refresh the display (data will update via Firestore listener)
+    // Refresh the dashboard data after successful update
     console.log('Status updated:', result);
+    try {
+      await loadPotholes();
+    } catch (refreshError) {
+      console.error('Error refreshing pothole data after update:', refreshError);
+    }
     
   } catch (error) {
     console.error('Error marking pothole as repaired:', error);
@@ -455,21 +594,6 @@ window.markAsRepaired = async function(detectionId) {
     }
   }
 };
-
-// Firestore listener (public collection 'detections')
-const detectionsRef = collection(db, 'detections');
-const q = query(detectionsRef, orderBy('createdAt', 'desc'), limit(1000));
-onSnapshot(q, (snap) => {
-  allDetections = [];
-  snap.forEach(doc => {
-    const detection = { id: doc.id, ...doc.data() };
-    allDetections.push(detection);
-    upsertMarker(detection);
-  });
-  
-  populateAreaFilter();
-  applyFilters(); // Apply current filters to new data
-});
 
 // Mobile detection and responsive view
 function checkMobileView() {
@@ -497,10 +621,10 @@ function renderMobileWorkerView() {
     const mapsUrl = loc ? `https://www.google.com/maps?q=${loc.lat},${loc.lng}` : '#';
     
     return `
-      <div class="mobile-card">
-        <div class="mobile-card-header">
-          <strong>${detection.street_name || 'Unknown'}</strong>
-          <span class="badge badge-${detection.severity}">${detection.severity}</span>
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <strong>${detection.street_name || 'Unknown'}</strong>
+            <span class="badge badge-${detection.severity}">${(detection.severity || '').toUpperCase()}</span>
         </div>
         <div class="mobile-card-body">
           <p>Area: ${detection.area || 'Unknown'}</p>
@@ -518,3 +642,6 @@ function renderMobileWorkerView() {
 
 window.addEventListener('resize', checkMobileView);
 checkMobileView();
+
+// Load pothole data on page load
+loadPotholes();
