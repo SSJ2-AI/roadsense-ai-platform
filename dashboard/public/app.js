@@ -1,24 +1,26 @@
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE/export?format=csv';
+// Google Sheet CSV endpoint (published to web)
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1O-i2X66NVLQq43l1ORNreTMOEKJoCQQzaTFL9wT7eLE/export?format=csv&gid=0';
 
-// Load potholes from Google Sheets
+let allPotholes = [];
+
 async function loadPotholes() {
   try {
+    console.log('Fetching potholes from Google Sheets...');
     const response = await fetch(SHEET_URL);
-    const text = await response.text();
+    const csvText = await response.text();
+    console.log('CSV fetched successfully');
     
-    // Parse CSV data
-    const lines = text.split('\n');
+    // Parse CSV manually
+    const lines = csvText.split('\n');
     const headers = lines[0].split(',');
     
-    // Clear existing potholes
-    potholes = [];
+    allPotholes = [];
     
-    // Parse each row
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
       
       const values = lines[i].split(',');
-      if (values.length < 11) continue;
+      if (values.length < 7) continue;
       
       const pothole = {
         id: values[0] || '',
@@ -37,17 +39,45 @@ async function loadPotholes() {
       };
       
       if (pothole.latitude && pothole.longitude) {
-        potholes.push(pothole);
-        addMarker(pothole);
+        allPotholes.push(pothole);
       }
     }
     
-    updateStats();
-    console.log('Potholes loaded successfully from Google Sheets');
+    console.log(`Loaded ${allPotholes.length} potholes`);
+    renderDashboard();
+    
   } catch (error) {
     console.error('Error loading potholes:', error);
+    document.getElementById('priority-queue').innerHTML = '<p>Error loading data. Please refresh.</p>';
   }
 }
 
-// Call on page load
+function renderDashboard() {
+  // Update stats
+  document.getElementById('total-potholes').textContent = allPotholes.length;
+  
+  // Render priority queue
+  const queueContainer = document.getElementById('priority-queue');
+  queueContainer.innerHTML = '';
+  
+  allPotholes.forEach(pothole => {
+    const row = document.createElement('div');
+    row.className = 'pothole-row';
+    row.innerHTML = `
+      <strong>${pothole.id}</strong> - ${pothole.street} (${pothole.intersection})<br>
+      Severity: ${pothole.severity} | Status: ${pothole.status}<br>
+      Location: ${pothole.latitude}, ${pothole.longitude}
+    `;
+    queueContainer.appendChild(row);
+    
+    // Add to map if map exists
+    if (typeof L !== 'undefined' && window.map) {
+      L.marker([pothole.latitude, pothole.longitude])
+        .addTo(window.map)
+        .bindPopup(`<b>${pothole.id}</b><br>${pothole.street}<br>Severity: ${pothole.severity}`);
+    }
+  });
+}
+
+// Load on page ready
 document.addEventListener('DOMContentLoaded', loadPotholes);
